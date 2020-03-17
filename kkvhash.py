@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-
 def ROTRIGHT(i: int, bits: int) -> int:
     return i >> bits | i << 32 - bits
 
