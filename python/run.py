@@ -20,13 +20,13 @@ def parse_args() -> Namespace:
     parser.add_argument('--similarity', action='store_true', help='Print similarity')
 
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument('-100mln', action='store_true', dest='mode_100mln')
+    mode.add_argument('-1mln', action='store_true', dest='mode_1mln')
 
     return parser.parse_args()
 
 
-def run_100mln() -> None:
-    analyzer = Analyzer(Mode.m100mln)
+def run_1mln() -> None:
+    analyzer = Analyzer(Mode.m1mln)
 
     try:
         with open(analyzer.paths.input) as fr:
@@ -41,6 +41,8 @@ def run_100mln() -> None:
         raise f"Cannot open the file: {analyzer.paths.input}"
 
     print(f"Duplicates: {analyzer.find_duplicates()}")
+
+    analyzer.dump()
 
 
 def run_simple(similarity: bool = False) -> None:
@@ -109,8 +111,8 @@ def run_simple(similarity: bool = False) -> None:
 def main() -> None:
     args = parse_args()
 
-    if args.mode_100mln:
-        run_100mln()
+    if args.mode_1mln:
+        run_1mln()
     else:
         run_simple(args.similarity)
 

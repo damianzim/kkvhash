@@ -19,6 +19,12 @@ class Analyzer(object):
         self.paths = Paths.get_path(mode)
         self._limmit = Analyzer.BUFFER_LIMIT if buffer_limit is None else buffer_limit
         self.__buffer: List[Tuple[int, int]] = []
+        self.__post_data = {
+            'total_quantity': 0,
+            'number_of_duplicates': 0,
+            'duplicate_indicator': 0,
+            'duplicates': {},
+        }
 
     def size(self) -> int:
         return len(self.__buffer)
@@ -29,31 +35,54 @@ class Analyzer(object):
     def can_append(self) -> bool:
         return self.size() < self._limmit
 
-    def load(self, path: Path) -> bool:
+    def load(self) -> bool:
         try:
-            with open(path) as fr:
-                self.__buffer = yaml.load(fr, Loader=yaml.FullLoader)
+            with open(self.paths.output) as fr:
+                self.__post_data = yaml.load(fr, Loader=yaml.FullLoader)
                 return self.__buffer is not None
         except:
             return False
 
-    def dump(self, path: Path) -> bool:
-        pass
+    def dump(self) -> bool:
+        try:
+            with open(self.paths.output, 'w') as fw:
+                yaml.dump(self.__post_data, fw)
+                return True
+        except:
+            return False
 
     def append(self, hash: int, index: int) -> None:
         if self.can_append():
             self.__buffer.append((hash, index))
+            self.__post_data['total_quantity'] += 1
+
+    def __append_duplicate(self, hash: int, info: Tuple[int, List[int]]) -> None:
+        self.__post_data['number_of_duplicates'] += info[0]
+        self.__post_data['duplicates'][hash] =  { i: None for i in info[1]}
+
+    def __update_duplicate_indicator(self) -> None:
+        self.__post_data['duplicate_indicator'] = \
+            self.__post_data['number_of_duplicates'] / self.__post_data['total_quantity']
 
     def find_duplicates(self) -> int:
-        self.__duplicates = []
+        if not self.size():
+            return self.__post_data['number_of_duplicates']
+
+        duplicates = []
         seen = {}
 
         for hash, index in self.__buffer:
             if hash not in seen:
-                seen[hash] = 1
+                seen[hash] = [1, [index]]
             else:
-                if seen[hash] == 1:
-                    self.__duplicates.append(hash)
-                seen[hash] += 1
+                if seen[hash][0] == 1:
+                    duplicates.append(hash)
+                seen[hash][0] += 1
+                seen[hash][1].append(index)
 
-        return len(self.__duplicates)
+        for _duplicate in duplicates:
+            self.__append_duplicate(_duplicate, seen[_duplicate])
+
+        self.__update_duplicate_indicator()
+
+        return len(duplicates)

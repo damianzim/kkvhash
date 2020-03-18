@@ -14,7 +14,7 @@ class PathSet(NamedTuple):
 
 @unique
 class Mode(IntEnum):
-    m100mln = 1 # 100 mln most popular passwords
+    m1mln = 1 # 100 mln most popular passwords
     korelogic_password = 2
 
 
@@ -24,9 +24,9 @@ OUTPUT_DIR = '../data/output'
 
 class Paths(object):
     PATHS = {
-        Mode.m100mln: [
-            '10-million-password-list-top-1000000.txt',
-            '100mln.yaml',
+        Mode.m1mln: [
+            '1-million-password-list-top-1000000.txt',
+            '1mln.yaml',
         ]
     }
 
