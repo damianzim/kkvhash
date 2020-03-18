@@ -3,39 +3,15 @@ from argparse import (
     Namespace,
 )
 import datetime
-from enum import Enum
-from pathlib import Path
 
+from analyzer import Analyzer
+from config import (
+    Mode,
+)
 from kkvhash import kkv_hash
-from testing.similarity import sim_int_list_cross
-
-
-INPUT_DIR = 'data/input'
-OUTPUT_DIR = 'data/output'
-FILENAMES = {
-    '100mln': '10-million-password-list-top-1000000.txt',
-    'korelogic_password': 'korelogic-password.txt',
-}
-
-
-class NoValue(Enum):
-    def __repr__(self):
-        return '<%s.%s>' % (self.__class__.__name__, self.name)
-
-
-class DataType(NoValue):
-    INPUT = 'input'
-    OUTPUT = 'output'
-
-
-def resolve_data_path(filename: str, datatype: DataType) -> Path:
-    if not datatype in DataType:
-        return Path()
-
-    path = Path(INPUT_DIR if datatype == DataType.INPUT else OUTPUT_DIR)
-    path /= filename
-
-    return path
+from testing.similarity import (
+    sim_int_list_cross,
+)
 
 
 def parse_args() -> Namespace:
@@ -50,35 +26,21 @@ def parse_args() -> Namespace:
 
 
 def run_100mln() -> None:
-    path = resolve_data_path(FILENAMES['100mln'], DataType.INPUT)
-
-    hashes = []
+    analyzer = Analyzer(Mode.m100mln)
 
     try:
-        with open(path) as fr:
+        with open(analyzer.paths.input) as fr:
+            index = 0
             while True:
                 line = fr.readline()
                 if not line:
                     break
-                hashes.append(kkv_hash(line.strip().encode()))
+                analyzer.append(kkv_hash(line.strip().encode()), index)
+                index += 1
     except IOError:
-        raise f"Cannot open the file {str(path)}"
+        raise f"Cannot open the file: {analyzer.paths.input}"
 
-    seen = {}
-    dupes = []
-
-    for x in hashes:
-        if x not in seen:
-            seen[x] = 1
-        else:
-            if seen[x] == 1:
-                dupes.append(x)
-            seen[x] += 1
-
-    print(f"Duplicates: {len(dupes)}")
-
-    # dupes = sorted(map(lambda x: [x, seen[x]], dupes), key=lambda x: x[1], reverse=True)
-    # print(dupes)
+    print(f"Duplicates: {analyzer.find_duplicates()}")
 
 
 def run_simple(similarity: bool = False) -> None:
