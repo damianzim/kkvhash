@@ -10,6 +10,9 @@ from config import (
     Mode,
     Paths,
 )
+from utils import (
+    read_values_by_index,
+)
 
 class Analyzer(object):
 
@@ -64,6 +67,26 @@ class Analyzer(object):
         self.__post_data['duplicate_indicator'] = \
             self.__post_data['number_of_duplicates'] / self.__post_data['total_quantity']
 
+    def assign_values_to_duplicates(self) -> None:
+        if not len(self.__post_data['duplicates']):
+            return
+
+        read_values = read_values_by_index(
+            self.paths.input,
+            {
+                index: hash
+                for hash, indexes
+                in self.__post_data['duplicates'].items()
+                for index
+                in indexes
+            }
+        )
+
+        if read_values is None:
+            return
+
+        self.__post_data['duplicates'] = read_values
+
     def find_duplicates(self) -> int:
         if not self.size():
             return self.__post_data['number_of_duplicates']
@@ -84,5 +107,7 @@ class Analyzer(object):
             self.__append_duplicate(_duplicate, seen[_duplicate])
 
         self.__update_duplicate_indicator()
+
+        self.assign_values_to_duplicates()
 
         return len(duplicates)
