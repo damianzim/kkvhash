@@ -6,11 +6,11 @@ from typing import (
 
 import yaml
 
-from config import (
+from python.config import (
     Mode,
     Paths,
 )
-from utils import (
+from python.utils import (
     read_values_by_index,
 )
 
@@ -19,7 +19,7 @@ class Analyzer(object):
     BUFFER_LIMIT: int = 16777216        # About 64MiB (only hashes)
 
     def __init__(self, mode: Mode, buffer_limit: int = None) -> None:
-        self.paths = Paths.get_path(mode)
+        self.paths = Paths.get_paths(mode)
         self._limmit = Analyzer.BUFFER_LIMIT if buffer_limit is None else buffer_limit
         self.__buffer: List[Tuple[int, int]] = []
         self.__post_data = {

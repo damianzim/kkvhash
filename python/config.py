@@ -1,5 +1,9 @@
 from enum import IntEnum, unique
 from pathlib import Path
+from os.path import (
+    abspath,
+    dirname,
+)
 from typing import (
     Dict,
     NamedTuple,
@@ -31,12 +35,14 @@ class Paths(object):
     }
 
     @staticmethod
-    def get_path(mode: Mode) -> Optional[PathSet]:
+    def get_paths(mode: Mode) -> Optional[PathSet]:
         if not mode in Paths.PATHS:
             return None
 
-        a = Path(INPUT_DIR)
+        base_path = dirname(abspath(__file__))
+
+        a = Path(base_path, INPUT_DIR).resolve()
         a /= Paths.PATHS[mode][0]
-        b = Path(OUTPUT_DIR)
+        b = Path(base_path, OUTPUT_DIR).resolve()
         b /= Paths.PATHS[mode][1]
         return PathSet(a, b)

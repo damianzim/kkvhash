@@ -1,15 +1,18 @@
+import sys
+sys.path.insert(0, '..')
+
 from argparse import (
     ArgumentParser,
     Namespace,
 )
 import datetime
 
-from analyzer import Analyzer
-from config import (
+from python.analyzer import Analyzer
+from python.config import (
     Mode,
 )
 from kkvhash import kkv_hash
-from testing.similarity import (
+from python.testing.similarity import (
     sim_int_list_cross,
 )
 
