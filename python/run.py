@@ -24,6 +24,7 @@ def parse_args() -> Namespace:
 
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('-1mln', action='store_true', dest='mode_1mln')
+    mode.add_argument('-1mln-analyze', action='store_true', dest='mode_1mln_analyze')
 
     return parser.parse_args()
 
@@ -46,6 +47,18 @@ def run_1mln() -> None:
     print(f"Duplicates: {analyzer.find_duplicates()}")
 
     analyzer.dump()
+
+
+def run_1mln_analyze() -> None:
+    analyzer = Analyzer(Mode.m1mln)
+    analyzer.load()
+
+    duplicates_similarity = analyzer.calc_similarity()
+    if duplicates_similarity is not None:
+        for similarity, occurrence in duplicates_similarity:
+            print(f"{similarity:3d}% - {occurrence}")
+    else:
+        print('There are no duplicates')
 
 
 def run_simple(similarity: bool = False) -> None:
@@ -116,6 +129,8 @@ def main() -> None:
 
     if args.mode_1mln:
         run_1mln()
+    elif args.mode_1mln_analyze:
+        run_1mln_analyze()
     else:
         run_simple(args.similarity)
 

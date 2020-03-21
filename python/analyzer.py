@@ -1,6 +1,10 @@
+from itertools import (
+    combinations,
+)
 from pathlib import Path
 from typing import (
     List,
+    Optional,
     Tuple,
 )
 
@@ -10,8 +14,12 @@ from python.config import (
     Mode,
     Paths,
 )
+from python.testing.similarity import (
+    sim_str,
+)
 from python.utils import (
     read_values_by_index,
+    round_to,
 )
 
 class Analyzer(object):
@@ -26,6 +34,7 @@ class Analyzer(object):
             'total_quantity': 0,
             'number_of_duplicates': 0,
             'duplicate_indicator': 0,
+            'with_the_same_hash': 0,
             'duplicates': {},
         }
 
@@ -106,8 +115,27 @@ class Analyzer(object):
         for _duplicate in duplicates:
             self.__append_duplicate(_duplicate, seen[_duplicate])
 
+        self.__post_data['with_the_same_hash'] = len(duplicates)
         self.__update_duplicate_indicator()
 
         self.assign_values_to_duplicates()
 
         return len(duplicates)
+
+    def calc_similarity(self) -> Optional[Tuple[Tuple[int, int], ...]]:
+        if not len(self.__post_data['duplicates']):
+            return None
+
+        result = [0] * 21
+
+        for duplicate in self.__post_data['duplicates'].values():
+            pairs = list(combinations(duplicate.values(), 2))
+            for pair in pairs:
+                similarity = round_to(sim_str(*pair), 0.05)
+                result[int(similarity * 100) // 5] += 1
+
+        return tuple(
+            (index * 5, occurrence)
+            for index, occurrence
+            in enumerate(result)
+        )

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import (
     Dict,
     Optional,
+    Union,
 )
 
 def read_values_by_index(
@@ -29,3 +30,8 @@ def read_values_by_index(
         return None
 
     return values
+
+
+def round_to(n: Union[float, int], precision: Union[float, int]) -> Union[float, int]:
+    correction = 0.5 if n >= 0 else -0.5
+    return int( n/precision+correction ) * precision
