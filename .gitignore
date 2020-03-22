@@ -2,6 +2,10 @@
 
 __pycache__
 
+# Data
+data/input/instant/*
+!data/input/instant/.keep
+
 # Notebook
 .ipynb_checkpoints
 

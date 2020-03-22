@@ -7,13 +7,16 @@ from argparse import (
 )
 import datetime
 
+from kkvhash import kkv_hash
 from python.analyzer import Analyzer
 from python.config import (
     Mode,
 )
-from kkvhash import kkv_hash
 from python.testing.similarity import (
     sim_int_list_cross,
+)
+from python.utils import (
+    read_values,
 )
 
 
@@ -25,24 +28,16 @@ def parse_args() -> Namespace:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('-1mln', action='store_true', dest='mode_1mln')
     mode.add_argument('-1mln-analyze', action='store_true', dest='mode_1mln_analyze')
+    mode.add_argument('-korelogic-password', action='store_true', dest='korelogic_password')
 
     return parser.parse_args()
 
 
-def run_1mln() -> None:
-    analyzer = Analyzer(Mode.m1mln)
+def run_case(mode: Mode) -> None:
+    analyzer = Analyzer(mode)
 
-    try:
-        with open(analyzer.paths.input) as fr:
-            index = 0
-            while True:
-                line = fr.readline()
-                if not line:
-                    break
-                analyzer.append(kkv_hash(line.strip().encode()), index)
-                index += 1
-    except IOError:
-        raise f"Cannot open the file: {analyzer.paths.input}"
+    if not read_values(analyzer):
+        return
 
     print(f"Duplicates: {analyzer.find_duplicates()}")
 
@@ -128,9 +123,11 @@ def main() -> None:
     args = parse_args()
 
     if args.mode_1mln:
-        run_1mln()
+        run_case(Mode.m1mln)
     elif args.mode_1mln_analyze:
         run_1mln_analyze()
+    elif args.korelogic_password:
+        run_case(Mode.korelogic_password)
     else:
         run_simple(args.similarity)
 

@@ -1,9 +1,30 @@
+from hashlib import sha256
 from pathlib import Path
 from typing import (
     Dict,
     Optional,
     Union,
 )
+
+
+kkvhash_py_path = Path('../python//kkvhash.py').resolve()
+
+
+def read_values(analyzer: 'Analyzer') -> bool:
+    try:
+        with open(analyzer.paths.input) as fr:
+            index = 0
+            while True:
+                line = fr.readline()
+                if not line:
+                    break
+                analyzer.append(kkv_hash(line.strip().encode()), index)
+                index += 1
+    except:
+        return False
+    finally:
+        return True
+
 
 def read_values_by_index(
         path: Path,
@@ -35,3 +56,7 @@ def read_values_by_index(
 def round_to(n: Union[float, int], precision: Union[float, int]) -> Union[float, int]:
     correction = 0.5 if n >= 0 else -0.5
     return int( n/precision+correction ) * precision
+
+
+def get_kkvhash_hash() -> str:
+    return sha256(open(kkvhash_py_path).read().encode()).hexdigest()[:7]

@@ -31,6 +31,10 @@ class Paths(object):
         Mode.m1mln: [
             '1-million-password-list-top-1000000.txt',
             '1mln.yaml',
+        ],
+        Mode.korelogic_password: [
+            'korelogic-password.txt',
+            'korelogic-password.yaml',
         ]
     }
 
