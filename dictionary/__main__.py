@@ -51,6 +51,7 @@ def parse_args() -> Namespace:
     parser = ArgumentParser()
 
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode')
+    parser.add_argument('--min-length', action='store', type=int, default=-1)
 
     return parser.parse_args()
 
@@ -170,8 +171,9 @@ class Dictionary(object):
     output_dir = 'output/'
     output_extension = '.txt'
 
-    def __init__(self, debug: bool = False) -> None:
+    def __init__(self, min_length: int = -1,  debug: bool = False) -> None:
         self.debug = debug
+        self.min_length = min_length
 
         self._base_path = dirname(abspath(__file__))
         self._fdict: TextIO = None
@@ -216,6 +218,10 @@ class Dictionary(object):
         for line in FileIterator(self._fdict):
             if not line:
                 break
+
+            if self.min_length > 0 and len(line) < self.min_length:
+                continue
+
             if self.debug:
                 print(f"Processing: {line}")
 
@@ -251,7 +257,7 @@ class Dictionary(object):
 
 if __name__ == '__main__':
     args = parse_args()
-    dictionary = Dictionary(debug=args.debug)
+    dictionary = Dictionary(min_length=args.min_length, debug=args.debug)
 
     result = dictionary.run()
     if result < 0:

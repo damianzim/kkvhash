@@ -1,10 +1,13 @@
 .vscode/
 
 __pycache__
+.DS_Store
 
 # Data
 data/input/instant/*
 !data/input/instant/.keep
+data/dictionary/output/*
+!data/dictionary/output/.keep
 
 # Notebook
 .ipynb_checkpoints
@@ -14,3 +17,8 @@ c/bin/*
 !c/bin/.keep
 c/obj/*
 !c/obj/.keep
+
+
+# cpp
+cpp/bin/*
+!cpp/bin/.keep
