@@ -29,6 +29,7 @@ def parse_args() -> Namespace:
     mode.add_argument('-1mln', action='store_true', dest='mode_1mln')
     mode.add_argument('-1mln-analyze', action='store_true', dest='mode_1mln_analyze')
     mode.add_argument('-korelogic-password', action='store_true', dest='korelogic_password')
+    mode.add_argument('-1mln-key', action='store_true', dest='mode_1mln_key')
 
     return parser.parse_args()
 
@@ -54,6 +55,22 @@ def run_1mln_analyze() -> None:
             print(f"{similarity:3d}% - {occurrence}")
     else:
         print('There are no duplicates')
+
+
+def expected_case(mode: Mode) -> None:
+    analyzer = Analyzer(mode)
+    if not analyzer.set_test_scenario():
+        return
+
+    base, start, end = analyzer.get_test_scenario()
+    for i in range(start, end):
+        # analyzer.append(kkv_hash(base+str(i).encode()), i))
+        if not analyzer.append(kkv_hash((base + str(i)).encode()), i):
+            break
+
+    print(f"Duplicates: {analyzer.find_duplicates()}")
+
+    analyzer.dump()
 
 
 def run_simple(similarity: bool = False) -> None:
@@ -128,6 +145,8 @@ def main() -> None:
         run_1mln_analyze()
     elif args.korelogic_password:
         run_case(Mode.korelogic_password)
+    elif args.mode_1mln_key:
+        expected_case(Mode.m1mln_key)
     else:
         run_simple(args.similarity)
 

@@ -6,6 +6,8 @@ from typing import (
     Union,
 )
 
+from python.kkvhash import kkv_hash
+
 
 kkvhash_py_path = Path('../python//kkvhash.py').resolve()
 
@@ -18,9 +20,10 @@ def read_values(analyzer: 'Analyzer') -> bool:
                 line = fr.readline()
                 if not line:
                     break
-                analyzer.append(kkv_hash(line.strip().encode()), index)
+                if not analyzer.append(kkv_hash(line.strip().encode()), index):
+                    break
                 index += 1
-    except:
+    except Exception as e:
         return False
     finally:
         return True

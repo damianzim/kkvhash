@@ -20,6 +20,7 @@ class PathSet(NamedTuple):
 class Mode(IntEnum):
     m1mln = 1 # 100 mln most popular passwords
     korelogic_password = 2
+    m1mln_key = 3
 
 
 INPUT_DIR = '../data/input'
@@ -35,6 +36,10 @@ class Paths(object):
         Mode.korelogic_password: [
             'korelogic-password.txt',
             'korelogic-password.yaml',
+        ],
+        Mode.m1mln_key: [
+            '',
+            '1mln-key.yaml',
         ]
     }
 
@@ -50,3 +55,13 @@ class Paths(object):
         b = Path(base_path, OUTPUT_DIR).resolve()
         b /= Paths.PATHS[mode][1]
         return PathSet(a, b)
+
+
+test_scenario = {
+    Mode.m1mln_key: (
+        'key',          # base
+        0,              # <
+        1000000,        # )
+    ),
+}
+
