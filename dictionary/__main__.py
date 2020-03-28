@@ -1,3 +1,8 @@
+from argparse import (
+    ArgumentParser,
+    Namespace,
+)
+from functools import reduce
 from os.path import (
     abspath,
     dirname,
@@ -42,6 +47,14 @@ letters =  {
 data_path = '../data/dictionary'
 
 
+def parse_args() -> Namespace:
+    parser = ArgumentParser()
+
+    parser.add_argument('-d', '--debug', action='store_true', help='Debug mode')
+
+    return parser.parse_args()
+
+
 class FileIterator(object):
 
     def __init__(self, ifs: TextIO) -> None:
@@ -58,6 +71,7 @@ class FileIterator(object):
         if line:
             return line
         raise StopIteration
+
 
 class Buffer(object):
 
@@ -84,37 +98,81 @@ class Buffer(object):
         return self._data
 
 
+class LetterStat(object):
+    letters: List[str]
+    limit: int
+    current: int = 0
+
+    def __init__(self, letters: List[str], tick_height: int) -> None:
+        self.letters = letters
+        self.limit = len(letters)
+
+        self._tick_divisor = tick_height // self.limit
+
+    def get(self, height: int) -> str:
+        if not height % self._tick_divisor:
+            if self.current + 1 < self.limit:
+                self.current += 1
+            else:
+                self.current = 0
+        return self.letters[self.current]
+
+
 class WordCombinations(object):
 
     def __init__(self, word: str) -> None:
         self._word = word
         self._combinations = 0
         self._i = 0
+        self._stat: List[LetterStat] = None
+        self._last_initialized = 1
 
     def __iter__(self) -> 'WordCombinations':
         return self
 
     def __next__(self) -> str:
-
-        # GET COMBINATIONS HERE!
-        if self._i < 1:
+        if self._stat is not None and self._i < self._combinations:
             self._i += 1
-            return ''
+            return ''.join([letter.get(self._i) for letter in self._stat])
         raise StopIteration
+
+    def count(self) -> int:
+        if not self._word:
+            return -1
+
+        if not self._word.islower() or not self._word.isalpha():
+            return -1
+
+        self._stat = []
+        for x in self._word:
+            letter_combinations = [x] + letters[x]
+            self._last_initialized *= len(letter_combinations)
+            self._stat.append(
+                LetterStat(letter_combinations, self._last_initialized)
+            )
+
+        self._combinations = reduce(
+            lambda x, y: x * y,
+            map(lambda x: x.limit, self._stat),
+        )
+
+        return self._combinations
 
     def print_farewell(self) -> None:
         if self._word and self._combinations > 0:
-            print(f"Word: {self._word} Combinations: {self._i}")
+            print(f"Word: {self._word} Combinations: {self._combinations}")
 
 
 class Dictionary(object):
 
-    buf_size = 128
+    buf_size = 1024
     input_file = 'input.txt'
     output_dir = 'output/'
     output_extension = '.txt'
 
-    def __init__(self) -> None:
+    def __init__(self, debug: bool = False) -> None:
+        self.debug = debug
+
         self._base_path = dirname(abspath(__file__))
         self._fdict: TextIO = None
         self._buf = Buffer(Dictionary.buf_size)
@@ -127,7 +185,15 @@ class Dictionary(object):
         if self._fword.closed:
             return False
 
-        saved = self._fword.write('\n'.join(self._buf.dump()) + '\n')
+        to_save = '\n'.join(self._buf.dump()) + '\n'
+        saved = self._fword.write(to_save)
+
+        if self.debug:
+            if len(to_save) == saved:
+                print(f"Dumped: {len(self._buf)}")
+            else:
+                print(f"Dumped: {saved}/{to_save} bytes")
+
         if saved > 0:
             self._buf.clear()
             return True
@@ -140,12 +206,19 @@ class Dictionary(object):
         fdict_path = Path(self._base_path, data_path, self.input_file).resolve()
         if not fdict_path.is_file():
             return -1
-        self._fdict = open(fdict_path)
+        try:
+            self._fdict = open(fdict_path)
+        except IOError:
+            print(f"Cannot open file: {fdict_path}")
+            return -1
 
         counter = 0
         for line in FileIterator(self._fdict):
             if not line:
                 return counter
+            if self.debug:
+                print(f"Processing: {line}")
+
             output_path = Path(
                 self._base_path,
                 data_path,
@@ -153,9 +226,16 @@ class Dictionary(object):
                 line + self.output_extension
             )
 
-            self._fword = open(output_path, "w")
+            try:
+                self._fword = open(output_path, "w")
+            except IOError:
+                print(f"Cannot open file: {output_path}")
+                continue
 
             words = WordCombinations(line)
+            if words.count() < 1:
+                self._fword.close()
+                continue
 
             for word in words:
                 if self._buf.append(word):
@@ -171,11 +251,12 @@ class Dictionary(object):
 
 
 if __name__ == '__main__':
-    dictionary = Dictionary()
+    args = parse_args()
+    dictionary = Dictionary(debug=args.debug)
 
     result = dictionary.run()
     if result < 0:
         print('Something went wrong!')
     else:
-        print(f"Saved: {result}")
+        print(f"Processed {result} words")
 
