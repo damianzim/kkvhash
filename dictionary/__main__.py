@@ -17,17 +17,17 @@ from typing import (
 
 letters =  {
 	'a': ['A', '4', '@'],
-	'b': ['B'],
-	'c': ['C'],
-	'd': ['D'],
+	'b': ['B', '6', '8'],
+	'c': ['C', '('],
+	'd': ['D', '0'],
 	'e': ['E', '3'],
 	'f': ['F'],
 	'g': ['G'],
 	'h': ['H'],
-	'i': ['I'],
+	'i': ['I', '1', '!', '|'],
 	'j': ['J'],
 	'k': ['K'],
-	'l': ['L'],
+	'l': ['L', '1', '7','!', '|'],
 	'm': ['M'],
 	'n': ['N'],
 	'o': ['O', '0'],
@@ -35,13 +35,13 @@ letters =  {
 	'q': ['Q', 'g'],
 	'r': ['R'],
 	's': ['S', '5', '$'],
-	't': ['T'],
+	't': ['T', '7'],
 	'u': ['U'],
 	'v': ['V', 'u'],
 	'w': ['W'],
 	'x': ['X'],
 	'y': ['Y'],
-	'z': ['Z'],
+	'z': ['Z', '2'],
 }
 
 data_path = '../data/dictionary'
@@ -215,9 +215,13 @@ class Dictionary(object):
         counter = 0
         for line in FileIterator(self._fdict):
             if not line:
-                return counter
+                break
             if self.debug:
                 print(f"Processing: {line}")
+
+            words = WordCombinations(line)
+            if words.count() < 1:
+                continue
 
             output_path = Path(
                 self._base_path,
@@ -230,11 +234,6 @@ class Dictionary(object):
                 self._fword = open(output_path, "w")
             except IOError:
                 print(f"Cannot open file: {output_path}")
-                continue
-
-            words = WordCombinations(line)
-            if words.count() < 1:
-                self._fword.close()
                 continue
 
             for word in words:
